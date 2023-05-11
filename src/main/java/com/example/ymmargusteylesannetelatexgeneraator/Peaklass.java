@@ -150,6 +150,10 @@ public class Peaklass extends Application {
         peaLava.show();
     }
 
+    public static void main(String[] args) {
+        launch();
+    }
+
     public static void teade(String sõnum) {
         Stage teade = new Stage();
         teade.setTitle("Teade");
@@ -171,8 +175,12 @@ public class Peaklass extends Application {
         piiriPaan.setBottom(kinnitusNupp);
     }
 
-    public static void main(String[] args) {
-        launch();
+    private static String genereeriTekst(List<Ülesanne> ülesanded) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ülesanded.size(); i++) {
+            sb.append(i + 1).append(". ").append(ülesanded.get(i).toString()).append("\n\n");
+        }
+        return sb.toString();
     }
 
     private static void genereeriPdf(String tekst) throws IOException {
@@ -210,17 +218,9 @@ public class Peaklass extends Application {
         }
     }
 
-    private static String genereeriTekst(List<Ülesanne> ülesanded) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < ülesanded.size(); i++) {
-            sb.append(i + 1).append(". ").append(ülesanded.get(i).toString()).append("\n\n");
-        }
-        return sb.toString();
-    }
-
     private static List<Teema> looTeemad() throws IOException {
         List<Teema> teemad = new ArrayList<>();
-        for (String nimi : Peaklass.teemadeNimed) teemad.add(new Teema(nimi));
+        for (String nimi : teemadeNimed) teemad.add(new Teema(nimi));
         return loeÜlesanded(teemad);
     }
 
