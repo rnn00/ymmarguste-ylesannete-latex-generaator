@@ -1,6 +1,7 @@
 package com.example.ymmargusteylesannetelatexgeneraator;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -15,8 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Peaklass extends Application {
-    private static final List<String> teemadeNimed = Arrays.asList("Järjestatud korpuse omadused", "Alumine ja ülemine raja", "Arvjadad. Jada piirväärtuse definitsioon ja omadused", "Jada piirväärtuse omadused ja arvutamine", "Monotoonsusprintsiip. Cauchy kriteerium. Osajadad", "Alumine ja ülemine piirväärtus", "Funktsiooni piirväärtuse definistioon ja omadused", "Funkstiooni piirväärtuse arvutamine. Pidevus", "Elementaarfunkstioonid. Pöördfunkstioon", "Ekvivalentsed suurused. Landau sümbolid", "Katkevad funkstioonid. Ühtlane pidevus");
-
+    private static final List<String> teemadeNimed = Arrays.asList("Järjestatud korpuse omadused", "Alumine ja ülemine raja", "Arvjadad. Jada piirväärtuse definitsioon ja omadused", "Jada piirväärtuse omadused ja arvutamine", "Monotoonsusprintsiip. Cauchy kriteerium. Osajadad", "Alumine ja ülemine piirväärtus", "Funktsiooni piirväärtuse definistioon ja omadused", "Funktsiooni piirväärtuse arvutamine. Pidevus", "Elementaarfunktsioonid. Pöördfunktsioon", "Ekvivalentsed suurused. Landau sümbolid", "Katkevad funktsioonid. Ühtlane pidevus");
 
     @Override
     public void start(Stage peaLava) throws IOException {
@@ -49,144 +49,123 @@ public class Peaklass extends Application {
                     valitudNupud.put(toggleButton.getText(), Boolean.TRUE);
                     Teema vaadeldav = teemaList.get(teemadeNimed.indexOf(toggleButton.getText()));
                     teemad.add(vaadeldav);
-                    System.out.println(vaadeldav.getNimi());
                 }
             }
-            if (valitudNupud.isEmpty()) {
-                teade();
-            } else {
-                piiriPaan.getChildren().clear();
+            if (valitudNupud.isEmpty()) throw new KäivitusErind("Ühtegi teemat ei valitud!");
+            vBox.getChildren().clear();
 
-                peaLava.setTitle("Arvutus/Tõestus");
-                Text ülemineTekst2 = new Text("Kas soovid arvutus- või tõestusülesandeid?");
-                RadioButton arvutus = new RadioButton("Arvutus");
-                RadioButton tõestus = new RadioButton("Tõestus");
-                looNupud(vBox, piiriPaan, kinnitusNupp, ülemineTekst2, arvutus, tõestus);
+            peaLava.setTitle("Arvutus/Tõestus");
+            Text ülemineTekst2 = new Text("Kas soovid arvutus- või tõestusülesandeid?");
+            RadioButton arvutus = new RadioButton("Arvutus");
+            RadioButton tõestus = new RadioButton("Tõestus");
+            looNupud(vBox, piiriPaan, kinnitusNupp, ülemineTekst2, arvutus, tõestus); // et vältida koodi kordamist
 
-                kinnitusNupp.setOnAction(event2 -> {
-                    piiriPaan.getChildren().clear();
+            kinnitusNupp.setOnAction(event2 -> {
+                int olemasolevateÜlesanneteArv = 0;
+                if (arvutus.isSelected()) {
+                    for (Teema teema : teemad) {
+                        olemasolevateÜlesanneteArv += teema.getArvutusÜlesanded().size();
+                    }
+                } else if (tõestus.isSelected()) {
+                    for (Teema teema : teemad) {
+                        olemasolevateÜlesanneteArv += teema.getTõestusÜlesanded().size();
+                    }
+                } else throw new KäivitusErind("Ühtegi ülesande tüüpi ei valitud!");
 
-                    int olemasolevateÜlesanneteArv = 0;
-                    if (arvutus.isSelected()) {
+                if (olemasolevateÜlesanneteArv == 0)
+                    throw new KäivitusErind("Valitud teemadele ei leitud ühtegi ülesannet!");
+
+                peaLava.setTitle("Ülesanded");
+                Text ülemineTekst3 = new Text("Kirjuta ülesannete arv ja vajuta 'ENTER'; vastavaid ülesandeid on kokku " + olemasolevateÜlesanneteArv + " tükki");
+                TextField ülesanneteArv = new TextField();
+
+                piiriPaan.setTop(ülemineTekst3);
+                vBox.getChildren().addAll(ülesanneteArv);
+                piiriPaan.setCenter(vBox);
+
+                int finalOlemasolevateÜlesanneteArv = olemasolevateÜlesanneteArv;
+                ülesanneteArv.setOnKeyPressed(event3 -> {
+                    if (event3.getCode() == KeyCode.ENTER) {
+                        int sisestatudArv = Integer.parseInt(ülesanneteArv.getText());
+                        List<Ülesanne> ülesanded = new ArrayList<>();
+                        List<Ülesanne> tagastatavadÜlesanded = new ArrayList<>();
+                        if (sisestatudArv > finalOlemasolevateÜlesanneteArv || sisestatudArv < 1)
+                            throw new KeelatudArgumendiErind("Sisestatud arv ei sobi!");
                         for (Teema teema : teemad) {
-                            olemasolevateÜlesanneteArv += teema.getArvutusÜlesanded().size();
-                        }
-                    } else if (tõestus.isSelected()) {
-                        for (Teema teema : teemad) {
-                            olemasolevateÜlesanneteArv += teema.getTõestusÜlesanded().size();
-                        }
-                    } else teade();
-
-                    if (olemasolevateÜlesanneteArv == 0) teade();
-
-                    peaLava.setTitle("Ülesanded");
-                    Text ülemineTekst3 = new Text("Kirjuta ülesannete arv ja vajuta 'ENTER'; vastavaid ülesandeid on kokku " + olemasolevateÜlesanneteArv + " tükki");
-                    TextField ülesanneteArv = new TextField();
-
-                    piiriPaan.setTop(ülemineTekst3);
-                    vBox.getChildren().clear();
-                    vBox.getChildren().addAll(ülesanneteArv);
-                    piiriPaan.setCenter(vBox);
-
-                    int finalOlemasolevateÜlesanneteArv = olemasolevateÜlesanneteArv;
-                    ülesanneteArv.setOnKeyPressed(event3 -> {
-                        if (event3.getCode() == KeyCode.ENTER) {
-                            int sisestatudArv = Integer.parseInt(ülesanneteArv.getText());
-                            boolean a = false;
-                            List<Ülesanne> ülesanded = new ArrayList<>();
-                            List<Ülesanne> tagastatavadÜlesanded = new ArrayList<>();
-                            if (sisestatudArv <= finalOlemasolevateÜlesanneteArv && sisestatudArv > 0) {
-                                for (Teema teema : teemad) {
-                                    if (arvutus.isSelected()) {
-                                        ülesanded.addAll(teema.getArvutusÜlesanded());
-                                    } else if (tõestus.isSelected()) {
-                                        ülesanded.addAll(teema.getTõestusÜlesanded());
-                                    }
-                                }
-                                Collections.shuffle(ülesanded);
-                                for (int i = 0; i < sisestatudArv; i++) {
-                                    tagastatavadÜlesanded.add(ülesanded.get(i));
-                                }
-                                a = true;
-                            } else teade();
-                            // TODO: see võiks olla Exception handleris hoopis
-                            if (a) {
-                                peaLava.setTitle("PDF/TXT");
-                                Text ülemineTekst4 = new Text("Kas soovid PDF- või TXT-faili?");
-                                RadioButton pdfNupp = new RadioButton("PDF");
-                                RadioButton txtNupp = new RadioButton("TXT");
-                                looNupud(vBox, piiriPaan, kinnitusNupp, ülemineTekst4, pdfNupp, txtNupp);
-
-                                kinnitusNupp.setOnAction(event4 -> {
-                                    if (pdfNupp.isSelected()) {
-                                        try {
-                                            genereeriPdf(genereeriTekst(tagastatavadÜlesanded));
-                                        } catch (IOException e) {
-                                            System.out.println("See peabki seda tegema");
-                                        }
-                                    } else if (txtNupp.isSelected()) {
-                                        try {
-                                            genereeriTxt(genereeriTekst(tagastatavadÜlesanded));
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    }
-                                    // TODO: see võiks olla Exception handleris hoopis
-                                    else {
-                                        teade();
-                                    }
-
-                                    piiriPaan.getChildren().clear();
-
-                                    Text tekst = new Text("Fail on loodud! Mida soovid teha?");
-                                    Button sulgeProgramm = new Button("Sulge programm");
-                                    Button avaFail = new Button("Ava fail");
-
-
-                                    piiriPaan.setCenter(tekst);
-                                    piiriPaan.setBottom(sulgeProgramm);
-                                    piiriPaan.setTop(avaFail);
-                                    sulgeProgramm.setOnAction(event5 -> System.exit(0));
-                                    if (txtNupp.isSelected()) {
-                                        avaFail.setOnAction(event6 -> getHostServices().showDocument(".\\väljund.txt"));
-                                    } else if (pdfNupp.isSelected()) {
-                                        avaFail.setOnAction(event6 -> getHostServices().showDocument(".\\väljund.pdf"));
-                                    }
-                                });
-
+                            if (arvutus.isSelected()) {
+                                ülesanded.addAll(teema.getArvutusÜlesanded());
+                            } else if (tõestus.isSelected()) {
+                                ülesanded.addAll(teema.getTõestusÜlesanded());
                             }
                         }
+                        Collections.shuffle(ülesanded);
+                        for (int i = 0; i < sisestatudArv; i++) {
+                            tagastatavadÜlesanded.add(ülesanded.get(i));
+                        }
 
-                    });
-                });
-            }
-        });
+                        vBox.getChildren().clear();
 
+                        peaLava.setTitle("PDF/TXT");
+                        Text ülemineTekst4 = new Text("Kas soovid PDF- või TXT-faili?");
+                        RadioButton pdfNupp = new RadioButton("PDF");
+                        RadioButton txtNupp = new RadioButton("TXT");
+                        looNupud(vBox, piiriPaan, kinnitusNupp, ülemineTekst4, pdfNupp, txtNupp);
+
+                        kinnitusNupp.setOnAction(event4 -> {
+                            if (pdfNupp.isSelected()) {
+                                try {
+                                    genereeriPdf(genereeriTekst(tagastatavadÜlesanded));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e); // ei näe probleemi selles lahenduses
+                                }
+                            } else if (txtNupp.isSelected()) {
+                                try {
+                                    genereeriTxt(genereeriTekst(tagastatavadÜlesanded));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            } else throw new KäivitusErind("Ühtegi failitüüpi ei valitud!");
+
+                            peaLava.setTitle("Valmis!");
+                            Text tekst = new Text("Fail on loodud! Mida soovid teha?");
+                            Button sulgeProgramm = new Button("Sulge programm");
+                            Button avaFail = new Button("Ava fail");
+
+                            piiriPaan.setCenter(tekst);
+                            piiriPaan.setBottom(sulgeProgramm);
+                            piiriPaan.setTop(avaFail);
+                            sulgeProgramm.setOnAction(event5 -> Platform.exit());
+                            if (txtNupp.isSelected()) {
+                                avaFail.setOnAction(event6 -> getHostServices().showDocument(".\\väljund.txt"));
+                            } else if (pdfNupp.isSelected()) {
+                                avaFail.setOnAction(event6 -> getHostServices().showDocument(".\\väljund.pdf"));
+                            }
+                        }); // event4
+                    } // if event3 == ENTER
+                }); // event3
+            }); // event2
+        }); // event1
         peaLava.setScene(new Scene(piiriPaan, 500, 500));
         peaLava.show();
     }
 
-    public static void teade() {
+    public static void teade(String sõnum) {
         Stage teade = new Stage();
         teade.setTitle("Teade");
-        Text tekst = new Text("Palun vali üks variant!");
         BorderPane piiriPaan2 = new BorderPane();
-        piiriPaan2.setCenter(tekst);
+        piiriPaan2.setCenter(new Text(sõnum));
         Scene stseen2 = new Scene(piiriPaan2, 300, 100);
         teade.setScene(stseen2);
         teade.show();
-        teade.setOnCloseRequest(e -> System.exit(0));
     }
 
-    private static void looNupud(VBox verticalBox, BorderPane piiriPaan, Button kinnitusNupp, Text ülemineTekst4, RadioButton pdfNupp, RadioButton txtNupp) {
-        ToggleGroup pdfTxt = new ToggleGroup();
-        pdfNupp.setToggleGroup(pdfTxt);
-        txtNupp.setToggleGroup(pdfTxt);
+    private static void looNupud(VBox verticalBox, BorderPane piiriPaan, Button kinnitusNupp, Text ülemineTekst, RadioButton nupp1, RadioButton nupp2) {
+        ToggleGroup toggleGroup = new ToggleGroup();
+        nupp1.setToggleGroup(toggleGroup);
+        nupp2.setToggleGroup(toggleGroup);
 
-
-        piiriPaan.setTop(ülemineTekst4);
-        verticalBox.getChildren().clear();
-        verticalBox.getChildren().addAll(pdfNupp, txtNupp);
+        piiriPaan.setTop(ülemineTekst);
+        verticalBox.getChildren().addAll(nupp1, nupp2);
         piiriPaan.setCenter(verticalBox);
         piiriPaan.setBottom(kinnitusNupp);
     }
@@ -196,27 +175,13 @@ public class Peaklass extends Application {
     }
 
     private static void genereeriPdf(String tekst) throws IOException {
-        String document = "\\documentclass{article}\n" +
-                "\\usepackage[utf8]{inputenc}\n" +
-                "\\usepackage[estonian]{babel}\n" +
-                "\\usepackage{amsmath}\n" +
-                "\\usepackage{amssymb}\n" +
-                "\\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}\n" +
-                "\\usepackage{amsthm}\n" +
-                "\\usepackage{mathtools}\n" +
-                "\\usepackage{amsfonts}\n" +
-                "\\usepackage{mathptmx}\n" +
-                "\\everymath{\\displaystyle}\n" +
-                "\\linespread{1.6}\n" +
-                "\\begin{document}\n" +
-                tekst + "\n" +
-                "\\end{document}";
+        String document = "\\documentclass{article}\n" + "\\usepackage[utf8]{inputenc}\n" + "\\usepackage[estonian]{babel}\n" + "\\usepackage{amsmath}\n" + "\\usepackage{amssymb}\n" + "\\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}\n" + "\\usepackage{amsthm}\n" + "\\usepackage{mathtools}\n" + "\\usepackage{amsfonts}\n" + "\\usepackage{mathptmx}\n" + "\\everymath{\\displaystyle}\n" + "\\linespread{1.6}\n" + "\\begin{document}\n" + tekst + "\n" + "\\end{document}";
 
         String fileName = "väljund.tex";
         try (Writer out = new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8)) {
             out.write(document);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // kole aga ei tohiks juhtuda
         }
 
         String os = System.getProperty("os.name").toLowerCase();
@@ -234,7 +199,7 @@ public class Peaklass extends Application {
                 System.out.println(rida);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // meil pole vaja et midagi teeks vist otseselt, las olla nii
         }
     }
 
@@ -264,17 +229,13 @@ public class Peaklass extends Application {
             for (Teema teema : teemad) {
                 while (sc.hasNextLine()) {
                     String rida = sc.nextLine();
-                    if (rida.equals("-----")) {
-                        break;
-                    }
+                    if (rida.equals("-----")) break;
                     String[] reaOsad = rida.split("; ");
                     teema.lisaÜlesanne(reaOsad[0], reaOsad[1], reaOsad[2]);
                 }
             }
         }
-
         return teemad;
     }
-
 
 }
