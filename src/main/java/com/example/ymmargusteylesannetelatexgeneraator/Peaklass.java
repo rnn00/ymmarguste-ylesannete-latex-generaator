@@ -76,6 +76,7 @@ public class Peaklass extends Application {
                     throw new KäivitusErind("Valitud teemadele ei leitud ühtegi ülesannet!");
 
                 peaLava.setTitle("Ülesanded");
+                piiriPaan.getChildren().remove(kinnitusNupp);
                 Text ülemineTekst3 = new Text("Kirjuta ülesannete arv ja vajuta 'ENTER'; vastavaid ülesandeid on kokku " + olemasolevateÜlesanneteArv + " tükki");
                 TextField ülesanneteArv = new TextField();
 
